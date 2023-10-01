@@ -13,6 +13,7 @@ body {
 }
 
 #canvas-container {
+	height: 100vh;
 	flex: auto;
 	display: flex;
 	justify-content: center;
