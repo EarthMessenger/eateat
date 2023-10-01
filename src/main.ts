@@ -7,14 +7,12 @@ interface GameConfig {
 	column: number,
 	keys: Array<string>,
 	minHWRatio: number,
-	accelY: number,
 }
 
 const config: GameConfig = {
 	column: 4,
 	keys: ["KeyD", "KeyF", "KeyJ", "KeyK"],
 	minHWRatio: 2.0,
-	accelY: 0.05,
 };
 
 const beatmap: Array<Array<boolean>> = [];
@@ -48,32 +46,32 @@ const getRow = (row: number) => {
 };
 
 let currentRow = 0;
-let floatY = 0.0;
-let velY = 0.0;
+let easeX = 1.0;
+
+const easeInOutCubic = (x: number): number => {
+	return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
 
 const redrawCanvas = () => {
 	const { height, width } = canvas;
-	const { column, accelY } = config;
+	const { column } = config;
 	const ctx = canvas.getContext("2d")!;
 	const blockSize = Math.floor(width / column);
 	const row = Math.ceil(height / blockSize);
 
 	ctx.clearRect(0, 0, width, height);
 
-
-	if (floatY <= 0.0) {
-		floatY = 0.0;
-		velY = 0.0;
-	} else {
-		floatY -= velY;
-		velY += accelY;
+	let floatY = 0.0;
+	if (easeX < 1.0) {
+		floatY = (1.0 - easeInOutCubic(easeX)) * blockSize;
+		easeX += 0.1;
 	}
 
 	for (let i = 0; i < row; i++) {
 		const r = getRow(i + currentRow);
 		for (let j = 0; j < column; j++) {
 			if (r[j]) {
-				ctx.fillRect(j * blockSize, height - (i + 1) * blockSize - floatY * blockSize, blockSize, blockSize);
+				ctx.fillRect(j * blockSize, height - (i + 1) * blockSize - floatY, blockSize, blockSize);
 			}
 		}
 	}
@@ -92,7 +90,7 @@ const handleKeys = (e: KeyboardEvent) => {
 		r[pressedColumn] = false;
 		if (r.every((e) => !e)) {
 			currentRow++;
-			floatY = 1.0;
+			easeX = 0.0;
 		}
 	}
 };
